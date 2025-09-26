@@ -14,10 +14,12 @@
     flex-direction: column;
     color: white;
     font-family: sans-serif;
+    margin: 0;
   }
   canvas {
     background-color: #222;
     border: 2px solid white;
+    touch-action: none; /* prevent browser scroll on swipe */
   }
   #score {
     font-size: 20px;
@@ -78,7 +80,7 @@ function update() {
     return;
   }
 
-  // Self collision (ignore check if snake length == 1)
+  // Self collision
   if (snake.length > 1 && snake.some(segment => segment.x === head.x && segment.y === head.y)) {
     alert("Game Over! Final Score: " + score);
     resetGame();
@@ -123,6 +125,32 @@ document.addEventListener('keydown', e => {
   if (e.key === 'ArrowLeft' && direction.x === 0) direction = {x:-scale, y:0};
   if (e.key === 'ArrowRight' && direction.x === 0) direction = {x:scale, y:0};
 });
+
+// 📱 Mobile swipe controls
+let touchStartX = 0;
+let touchStartY = 0;
+
+canvas.addEventListener('touchstart', e => {
+  const touch = e.touches[0];
+  touchStartX = touch.clientX;
+  touchStartY = touch.clientY;
+}, false);
+
+canvas.addEventListener('touchend', e => {
+  const touch = e.changedTouches[0];
+  const dx = touch.clientX - touchStartX;
+  const dy = touch.clientY - touchStartY;
+
+  if (Math.abs(dx) > Math.abs(dy)) {
+    // Horizontal swipe
+    if (dx > 0 && direction.x === 0) direction = {x:scale, y:0};  // right
+    if (dx < 0 && direction.x === 0) direction = {x:-scale, y:0}; // left
+  } else {
+    // Vertical swipe
+    if (dy > 0 && direction.y === 0) direction = {x:0, y:scale};  // down
+    if (dy < 0 && direction.y === 0) direction = {x:0, y:-scale}; // up
+  }
+}, false);
 
 function gameLoop() {
   update();
